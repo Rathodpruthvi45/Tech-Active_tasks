@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Search</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="container">
+        <h1>User Search</h1>
+        <input type="text" id="searchInput" placeholder="Search by first name or email">
+        <button onclick="searchUsers()">Search</button>
+        <div id="userList"></div>
+        <div id="pagination"></div>
+    </div>
+
+    <script>
+        function searchUsers() {
+            var searchInput = document.getElementById("searchInput").value.trim();
+            var url = "http://localhost/Task_2/fetch_api.php";
+            if (searchInput !== "") {
+                url += "?search=" + searchInput;
+            }
+            fetchUsers(url);
+        }
+
+        function fetchUsers(url) {
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    displayUsers(data);
+                    displayPagination(data);
+                })
+                .catch(error => console.error('Error:', error));
+        }
+
+        function displayUsers(data) {
+            var userList = document.getElementById("userList");
+            userList.innerHTML = "";
+            data.data.forEach(user => {
+                var userDiv = document.createElement("div");
+                userDiv.innerHTML = "<strong>Name:</strong> " + user.firstName + " " + user.lastName + ", <strong>Email:</strong> " + user.email;
+                userList.appendChild(userDiv);
+            });
+        }
+
+        function displayPagination(data) {
+            var pagination = document.getElementById("pagination");
+            pagination.innerHTML = "";
+
+            var totalPages = data.totalPages;
+            var currentPage = data.page;
+            var startUser = (currentPage - 1) * data.perPage + 1;
+            var endUser = Math.min(startUser + data.data.length - 1, data.total);
+
+            if (totalPages > 1) {
+                for (var i = 1; i <= totalPages; i++) {
+                    var pageLink = document.createElement("a");
+                    pageLink.href = "#";
+                    pageLink.textContent = i;
+                    if (i === currentPage) {
+                        pageLink.style.fontWeight = "bold";
+                    }
+                    pageLink.onclick = function () {
+                        var searchInput = document.getElementById("searchInput").value.trim();
+                        var url = "http://localhost/Task_2/fetch_api.php?page=" + this.textContent;
+                        if (searchInput !== "") {
+                            url += "&search=" + searchInput;
+                        }
+                        fetchUsers(url);
+                    };
+                    pagination.appendChild(pageLink);
+                }
+            }
+             var userRangeInfo = document.createElement("div");
+            userRangeInfo.textContent = "Showing users " + startUser + " to " + endUser + " of " + data.total;
+            pagination.appendChild(userRangeInfo);
+        }
+
+        // Initially fetch all users
+        window.onload = function () {
+            fetchUsers("http://localhost/Task_2/fetch_api.php");
+        };
+    </script>
+</body>
+
+</html>
